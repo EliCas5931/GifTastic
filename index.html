@@ -27,40 +27,52 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script type="text/javascript">
         //Make a string of topics 
-        var franchise = ["Pokemon", "Grand Theft Auto", "Assassin's Creed", "Battlefield", "Donkey Kong", "Warcraft", "Super Mario", "Elder Scrolls", "Call of Duty", "God of War", "Resident Evil", "Mortal Kombat", "Halo Video Game", "Final Fantasy", "Fallout", "MegaMan", "The Sims", "Legend of Zelda", "Minecraft"]
+        var franchise = ["Pokemon", "Grand Theft Auto", "Assassin's Creed", "Battlefield", "Donkey Kong", "Warcraft", "Super Mario", "Elder Scrolls", "Call of Duty", "God of War", "Resident Evil", "Mortal Kombat", "Final Fantasy", "Fallout", "MegaMan", "The Sims", "Legend of Zelda", "Minecraft"]
 
         //Display gifs per franchise, stack them. Let user add their own
         $("button").on("click", displayGIFS);
         function displayGIFS() {
-            
-                var franchise = $(this).attr("data-name");
 
-                var queryURL = "https://api.giphy.com/v1/gifs/search?q=" + franchise +
-                    "&api_key=kDPlapy5bzLZQnvcDWnCeUtJ9w9vleJ1&limit=10";
+            var franchise = $(this).attr("data-name");
 
-                $.ajax({
-                    url: queryURL,
-                    method: "GET"
+            var queryURL = "https://api.giphy.com/v1/gifs/search?q=" + franchise +
+                "&api_key=kDPlapy5bzLZQnvcDWnCeUtJ9w9vleJ1&limit=10";
+
+            $.ajax({
+                url: queryURL,
+                method: "GET"
+            })
+                .then(function (response) {
+                    var results = response.data;
+                    var gifDiv = $("<div>");
+                    console.log(response);
+                    // adding this for the still verson of gif
+                    //var original = response.data.original;
+
+                    for (var i = 0; i < results.length; i++) {
+                        var rating = results[i].rating;
+
+                        var p = $("<p>").text("Rating: " + rating);
+                        var franchiseImage = $("<img>");
+                        franchiseImage.attr("src", results[i].images.original_still.url);
+                        //adding for animation
+                        franchiseImage.addClass("animation");
+                        franchiseImage.attr("data-state", "still")
+                        franchiseImage.attr("data-still", results[i].images.original_still.url);
+                        franchiseImage.attr("data-animate", results[i].images.original.url);
+
+                        gifDiv.append(p);
+                        gifDiv.append(franchiseImage);
+
+                        $("#gifs-go-here").prepend(gifDiv);
+                    }
+                    play();
+
                 })
-                    .then(function (response) {
-                        var results = response.data;
-                        var gifDiv = $("<div>");
-
-                        for (var i = 0; i < results.length; i++) {
-                            var rating = results[i].rating;
-                            var p = $("<p>").text("Rating: " + rating);
-                            var franchiseImage = $("<img>");
-                            franchiseImage.attr("src", results[i].images.fixed_height.url);
-
-                            gifDiv.append(p);
-                            gifDiv.append(franchiseImage);
-
-                            $("#gifs-go-here").prepend(gifDiv);
-                        }
-                       
-                    })
         };
-        
+
+
+
         //Push topics to HTML
         function renderButtons() {
             $("#buttons-go-here").empty();
@@ -75,15 +87,35 @@
             }
         }
 
-        $("#add-game").on("click", function(event) {
+        $("#add-game").on("click", function (event) {
             event.preventDefault();
             var games = $("#game-input").val().trim();
+            // Want to replace the current "game" class to a new class of "newgame" but it is not working
+            $(this).attr("class", "newgame");
             franchise.push(games);
             renderButtons();
+            displayGIFS();
+            play();
         });
+
+        function play() {
+            $(".animation").on("click", function () {
+                var state = $(this).attr("data-state");
+                if (state === "still") {
+                    $(this).attr("src", $(this).attr("data-animate"));
+                    $(this).attr("data-state", "animate");
+                } else {
+                    $(this).attr("src", $(this).attr("data-still"));
+                    $(this).attr("data-state", "still");
+                }
+            })
+        }
+
+
 
         $(document).on("click", ".game", displayGIFS);
         renderButtons();
+
     </script>
 
 </body>
